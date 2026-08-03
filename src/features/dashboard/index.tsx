@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Cpu, HardDrive, Server, Activity } from 'lucide-react'
 import { getSystemMetrics, getContainers, SystemMetrics, ContainerInfo } from '@/api/mochiops'
 
-export default function Dashboard() {
+export function Dashboard() {
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null)
   const [containers, setContainers] = useState<ContainerInfo[]>([])
 
@@ -49,7 +49,6 @@ export default function Dashboard() {
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-sm font-medium'>内存占用</CardTitle>
-
             <Activity className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
@@ -109,3 +108,6 @@ export default function Dashboard() {
     </div>
   )
 }
+
+// 底部加上这句，同时兼容 import Dashboard 和 import { Dashboard }
+export default Dashboard
