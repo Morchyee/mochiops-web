@@ -1,9 +1,14 @@
+import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Cpu, HardDrive, Server, Activity } from 'lucide-react'
 import { getSystemMetrics, getContainers, SystemMetrics, ContainerInfo } from '@/api/mochiops'
 
-export function Dashboard() {
+export const Route = createFileRoute('/_authenticated/')({
+  component: Dashboard,
+})
+
+function Dashboard() {
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null)
   const [containers, setContainers] = useState<ContainerInfo[]>([])
 
@@ -108,6 +113,3 @@ export function Dashboard() {
     </div>
   )
 }
-
-// 底部加上这句，同时兼容 import Dashboard 和 import { Dashboard }
-export default Dashboard
