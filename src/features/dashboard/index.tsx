@@ -1,14 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Cpu, HardDrive, Server, Activity } from 'lucide-react'
 import { getSystemMetrics, getContainers, SystemMetrics, ContainerInfo } from '@/api/mochiops'
 
-export const Route = createFileRoute('/_authenticated/')({
-  component: Dashboard,
-})
-
-function Dashboard() {
+// 关键在这里：改成 export function Dashboard()
+export function Dashboard() {
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null)
   const [containers, setContainers] = useState<ContainerInfo[]>([])
 
@@ -24,7 +20,6 @@ function Dashboard() {
 
   useEffect(() => {
     fetchData()
-    // 每 3 秒自动定时刷新指标
     const interval = setInterval(fetchData, 3000)
     return () => clearInterval(interval)
   }, [])
@@ -36,9 +31,7 @@ function Dashboard() {
         <p className='text-muted-foreground'>服务器系统硬件与 Docker 容器运行状态</p>
       </div>
 
-      {/* 1. CPU / 内存 / 磁盘 / 容器数 核心指标卡片 */}
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
-        {/* CPU 卡片 */}
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-sm font-medium'>CPU 使用率</CardTitle>
@@ -50,7 +43,6 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* 内存卡片 */}
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-sm font-medium'>内存占用</CardTitle>
@@ -64,7 +56,6 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* 磁盘卡片 */}
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-sm font-medium'>磁盘使用率</CardTitle>
@@ -76,7 +67,6 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Docker 容器数量 */}
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-sm font-medium'>运行容器数</CardTitle>
@@ -89,7 +79,6 @@ function Dashboard() {
         </Card>
       </div>
 
-      {/* 2. Docker 容器运行状态列表 */}
       <Card className='p-4'>
         <CardHeader>
           <CardTitle>容器状态看板</CardTitle>
@@ -113,3 +102,6 @@ function Dashboard() {
     </div>
   )
 }
+
+// 底部加上默认导出，兼容性拉满
+export default Dashboard
