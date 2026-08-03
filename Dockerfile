@@ -1,17 +1,17 @@
-# 第一阶段：构建前端静态文件
-FROM node:18-alpine AS builder
+# 第一阶段：构建前端静态文件（升至 Node 20 以适配 Vite）
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# 1. 直接用 npm 全局安装指定版本的 pnpm（避免 corepack 联网失败）
+# 1. 安装指定版本的 pnpm
 RUN npm install -g pnpm@9.0.0
 
 # 2. 复制依赖描述文件
 COPY package.json pnpm-lock.yaml ./
 
-# 3. 安装依赖（如果 lockfile 不匹配，换成普通的 pnpm install）
+# 3. 安装依赖
 RUN pnpm install
 
-# 4. 复制代码并构建
+# 4. 复制代码并打包
 COPY . .
 RUN pnpm build
 
