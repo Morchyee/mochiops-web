@@ -1,5 +1,5 @@
 // src/api/mochiops.ts
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://159.195.158.129:8000';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://159.195.158.129:8000/api';
 const API_KEY = '3caaede8a8f420982a74e9ebb92306143b2c07cc8c8abda27be35878be90aa66';
 
 export interface SystemMetrics {
