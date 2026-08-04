@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Cpu, HardDrive, Server, Activity } from 'lucide-react'
-import { getSystemMetrics, getContainers, SystemMetrics, ContainerInfo } from '@/api/mochiops'
+import {
+  getSystemMetrics,
+  getContainers,
+  type SystemMetrics,
+  type ContainerInfo,
+} from '@/api/mochiops'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 // 关键在这里：改成 export function Dashboard()
 export function Dashboard() {
@@ -14,21 +19,33 @@ export function Dashboard() {
       setMetrics(m)
       setContainers(c)
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('加载监控失败:', err)
     }
   }
 
   useEffect(() => {
-    fetchData()
-    const interval = setInterval(fetchData, 3000)
-    return () => clearInterval(interval)
+    const timer = setTimeout(() => {
+      void fetchData()
+    }, 0)
+    const interval = setInterval(() => {
+      void fetchData()
+    }, 3000)
+    return () => {
+      clearTimeout(timer)
+      clearInterval(interval)
+    }
   }, [])
 
   return (
-    <div className='p-6 space-y-6'>
+    <div className='space-y-6 p-6'>
       <div>
-        <h2 className='text-2xl font-bold tracking-tight'>MochiOps 实时监控面板</h2>
-        <p className='text-muted-foreground'>服务器系统硬件与 Docker 容器运行状态</p>
+        <h2 className='text-2xl font-bold tracking-tight'>
+          MochiOps 实时监控面板
+        </h2>
+        <p className='text-muted-foreground'>
+          服务器系统硬件与 Docker 容器运行状态
+        </p>
       </div>
 
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
@@ -38,7 +55,9 @@ export function Dashboard() {
             <Cpu className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{metrics ? `${metrics.cpu_usage_percent}%` : '加载中...'}</div>
+            <div className='text-2xl font-bold'>
+              {metrics ? `${metrics.cpu_usage_percent}%` : '加载中...'}
+            </div>
             <p className='text-xs text-muted-foreground'>实时处理器负载</p>
           </CardContent>
         </Card>
@@ -50,9 +69,13 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold'>
-              {metrics ? `${metrics.memory_used_gb} / ${metrics.memory_total_gb} GB` : '加载中...'}
+              {metrics
+                ? `${metrics.memory_used_gb} / ${metrics.memory_total_gb} GB`
+                : '加载中...'}
             </div>
-            <p className='text-xs text-muted-foreground'>占用率: {metrics?.memory_percent}%</p>
+            <p className='text-xs text-muted-foreground'>
+              占用率: {metrics?.memory_percent}%
+            </p>
           </CardContent>
         </Card>
 
@@ -62,7 +85,9 @@ export function Dashboard() {
             <HardDrive className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{metrics ? `${metrics.disk_percent}%` : '加载中...'}</div>
+            <div className='text-2xl font-bold'>
+              {metrics ? `${metrics.disk_percent}%` : '加载中...'}
+            </div>
             <p className='text-xs text-muted-foreground'>主分区空间</p>
           </CardContent>
         </Card>
@@ -86,12 +111,15 @@ export function Dashboard() {
         <CardContent>
           <div className='space-y-3'>
             {containers.map((c) => (
-              <div key={c.id} className='flex items-center justify-between border-b pb-2 text-sm'>
+              <div
+                key={c.id}
+                className='flex items-center justify-between border-b pb-2 text-sm'
+              >
                 <div>
                   <div className='font-semibold'>{c.name}</div>
                   <div className='text-xs text-muted-foreground'>{c.image}</div>
                 </div>
-                <span className='px-2 py-1 rounded bg-emerald-500/10 text-emerald-500 text-xs font-mono'>
+                <span className='rounded bg-emerald-500/10 px-2 py-1 font-mono text-xs text-emerald-500'>
                   {c.status}
                 </span>
               </div>

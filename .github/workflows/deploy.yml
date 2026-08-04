@@ -1,0 +1,100 @@
+name: Build & Deploy (mochiops-web)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# 同一分支的部署只保留最新一次，避免并发覆盖
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint the code
+        run: pnpm lint
+
+      - name: Build the project
+        run: pnpm build
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=ref,event=branch
+            type=sha
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 触发服务器上的部署 Webhook（与后端 MochiOps 的 docker.yml 相同机制）
+      # 服务器端需要已有 mochiops-web 的 docker compose 服务，见仓库 deploy/ 目录
+      - name: Deploy via webhook
+        if: github.ref == 'refs/heads/main'
+        env:
+          WEBHOOK_URL: ${{ secrets.SERVER_WEBHOOK_URL }}
+          API_KEY: ${{ secrets.MOCHIOPS_API_KEY }}
+        run: |
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "Deploying ghcr.io/${REPO_LOWER}:latest to container mochiops-web"
+          curl -X POST "${WEBHOOK_URL}?image_name=ghcr.io/${REPO_LOWER}:latest&container_name=mochiops-web" \
+            -H "X-API-Key: ${API_KEY}" \
+            -s --show-error --fail
+
+      # 如果服务器不走 Webhook，而是 SSH 直连，可把上面的步骤换成：
+      # - name: Deploy via SSH
+      #   uses: appleboy/ssh-action@v1
+      #   with:
+      #     host: ${{ secrets.SERVER_HOST }}
+      #     username: ${{ secrets.SERVER_USER }}
+      #     key: ${{ secrets.SERVER_SSH_KEY }}
+      #     script: |
+      #       cd /opt/mochiops-web
+      #       docker compose pull
+      #       docker compose up -d
